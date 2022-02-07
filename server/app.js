@@ -12,28 +12,14 @@ const app = express()
 const server = http.createServer(app)
 const io = socketIo(server)
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
-
-const rules = []
-
 app.get('/',(req,res,next) => {
-    res.sendFile(path.resolve(__dirname,'../','client','index.html'))
-})
-
-app.post('/tweet',(req,res,next) => {
-
-    rules.pop()
-    rules.push(req.body)
     res.sendFile(path.resolve(__dirname,'../','client','index.html'))
 })
 
 const rulesURL = 'https://api.twitter.com/2/tweets/search/stream/rules'
 const streamURL = 'https://api.twitter.com/2/tweets/search/stream?tweet.fields=public_metrics&expansions=author_id'
 
-// const rules = [{ value : `coding` }]
+const rules = [{ value : `coding` }]
 
 // Get stream rules
 async function getRules() { 
@@ -105,8 +91,10 @@ function streamTweets(socket){
 
     stream.on('data', (data) => {
         try {
+            console.log("****");
+            console.log(data);
             const json = JSON.parse(data)
-            // console.log(json);
+            console.log(json);
             socket.emit('tweet',json)
             
         } catch (error) {
@@ -120,11 +108,12 @@ io.on('connection', async () => {
 
     try {       
         let currentRules
+        // to get rules
         currentRules = await getRules()
+
         // to delete rules
         await deleteRules(currentRules)
-        console.log(rules.length);
-        // to get rules
+        console.log(rules.length);        
                 
         // to setRules
         await setRules()
@@ -132,9 +121,9 @@ io.on('connection', async () => {
     } catch (error) {
         console.log("error" + error);
         process.exit(1)
-    } 
-        streamTweets(io)
+    }
 
+    streamTweets(io)
 })
 
 
